@@ -18,7 +18,7 @@ from celery.utils.log import get_task_logger
 
 from jobs.presets import TagParser
 from utils import (
-    garmin, kml, osmand, osmconf, osmparse, overpass, pbf, shp, thematic_shp
+    garmin, kml, mbtiles, osmand, osmconf, osmparse, overpass, pbf, shp, thematic_shp
 )
 
 # Get an instance of a logger
@@ -235,6 +235,47 @@ class ThematicLayersExportTask(ExportTask):
         except Exception as e:
             logger.error('Raised exception in thematic task, %s', str(e))
             raise Exception(e)  # hand off to celery..
+
+
+class MbtilesExportTask(ExportTask):
+    """
+    Task to export MBTiles.
+    """
+
+    name = "MBTiles Export"
+
+    def run(self, run_uid=None, stage_dir=None, job_name=None):
+        from tasks.models import ExportRun
+        self.update_task_state(run_uid=run_uid, name=self.name)
+        run = ExportRun.objects.get(uid=run_uid)
+        bbox = run.job.tl_extent
+        result = []
+        for idx, info in enumerate(run.job.metadata.get("mbtiles", [])):
+            archive = "%s%s_%d.mbtiles" % (stage_dir, job_name, idx)
+            max_zoom = info["max_zoom"]
+            min_zoom = info["min_zoom"]
+            source = info["source"]
+            try:
+                tiles = mbtiles.MBTiles(
+                    bbox=bbox,
+                    max_zoom=info["max_zoom"],
+                    min_zoom=info["min_zoom"],
+                    source=info["source"],
+                    out=archive,
+                    job_name=job_name,
+                    debug=True,
+                )
+                out = tiles.generate()
+
+                result.append({
+                    'result': out,
+                    'name': info["name"],
+                })
+            except Exception as e:
+                logger.error('Raised exception in mbtiles task, %s', str(e))
+                raise Exception(e)  # hand off to celery..
+
+        return result
 
 
 class ShpExportTask(ExportTask):

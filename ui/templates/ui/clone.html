@@ -18,6 +18,7 @@
                 <ul id="tabs" class="nav nav-pills">
                     <li id="create-tab" role="presentation" class="active"><a data-toggle="tab" href="#create">{% trans 'Describe Export' %}</a></li>
                     <li id="formats-tab" role="presentation"><a data-toggle="tab" href="#formats">{% trans 'File Formats' %}</a></li>
+                    <li id="mbtiles-tab" role="presentation" class="hidden"><a data-toggle="tab" href="#mbtiles">{% trans 'MBTiles' %}</a></li>
                     <li id="features-tab" role="presentation"><a data-toggle="tab" href="#features">{% trans 'Tree Tag' %}</a></li>
                     <li id="upload-tab" role="presentation"><a data-toggle="tab" href="#upload">{% trans 'Preset File' %}</a></li>
                     <li id="summary-tab" role="presentation"><a data-toggle="tab" href="#summary">{% trans 'Export Details' %}</a></li>
@@ -67,6 +68,33 @@
                                     <div id="supported-formats"></div>
                                 </div>
                             </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div id="mbtiles" class="tab-pane fade in">
+                      <div class="panel panel-default">
+                        <div class="panel-body">
+                          <label class="control-label" for="formats">{% trans 'Select MBTiles Sources' %}</label>
+                          <p>{% trans 'MBTiles sources can be specified as Leaflet-style URL templates (e.g. <code>http://tile.openstreetmap.org/{z}/{x}/{y}.png</code>), TileJSON endpoints, or valid tilelive URIs.' %}</p>
+                          <div class="form-group">
+                            <div class="row">
+                              <div class="col-sm-3">
+                                <input class="form-control left" type="text" name="mbtiles_name" value="" placeholder="Name"/>
+                              </div>
+                              <div class="col-sm-6">
+                                <input class="form-control middle" type="text" name="mbtiles_source" value="" placeholder="http://tile.openstreetmap.org/{z}/{x}/{y}.png"/>
+                              </div>
+                              <div class="col-sm-1">
+                                <input class="form-control middle" type="number" title="{% trans 'Min Zoom' %}" name="mbtiles_minzoom" value="15"/>
+                              </div>
+                              <div class="col-sm-1">
+                                <input class="form-control middle" type="number" title="{% trans 'Max Zoom' %}" name="mbtiles_maxzoom" value="16"/>
+                              </div>
+                              <div class="col-sm-1">
+                                <button class="btn btn-primary right add glyphicon glyphicon-plus-sign"></button>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>

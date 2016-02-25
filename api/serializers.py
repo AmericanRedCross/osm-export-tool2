@@ -383,7 +383,8 @@ class JobSerializer(serializers.Serializer):
         ('kml', 'KML Format'),
         ('garmin', 'Garmin Format'),
         ('sqlite', 'SQLITE Format'),
-        ('thematic', 'Thematic Shapefile Format')
+        ('thematic', 'Thematic Shapefile Format'),
+        ('mbtiles', 'MBTiles'),
     )
 
     formats = serializers.MultipleChoiceField(
@@ -453,6 +454,7 @@ class JobSerializer(serializers.Serializer):
         default=serializers.CurrentUserDefault()
     )
     tags = serializers.SerializerMethodField()
+    metadata = serializers.JSONField()
 
     def create(self, validated_data):
         """Creates an export Job."""

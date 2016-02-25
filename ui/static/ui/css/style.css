@@ -288,6 +288,34 @@ li.next {
     display: none;
 }
 
+#mbtiles .row {
+  padding-bottom: 5px;
+}
+
+#mbtiles input[type=number]::-webkit-inner-spin-button,
+#mbtiles input[type=number]::-webkit-outer-spin-button {
+  opacity: 1;
+}
+
+#mbtiles .left {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+#mbtiles .right {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+#mbtiles .middle {
+  border-radius: 0;
+  border-left: 0;
+}
+
+#mbtiles button.glyphicon {
+  top: 0px;
+}
+
 /* gazetteer lookup styles */
 
 div#gazetteer {

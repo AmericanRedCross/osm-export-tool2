@@ -86,6 +86,30 @@ create.job = (function(){
         // add export format checkboxes
         buildExportFormats();
 
+        // wire up the MBTiles row addition/removal buttons
+        $('#mbtiles .add').on('click', function(e){
+            if ($(this).hasClass('add')) {
+                // clone and reset the source on the new row
+                var newRow = $('#mbtiles .row').last().clone(true);
+                newRow.find('input[name=mbtiles_name]').val('');
+                newRow.find('input[name=mbtiles_source]').val('');
+
+                // change the button on the clicked row to be a removal
+                $(this).removeClass('glyphicon-plus-sign');
+                $(this).removeClass('btn-primary');
+                $(this).removeClass('add');
+                $(this).addClass('glyphicon-minus-sign');
+                $(this).addClass('btn-warning');
+                $(this).addClass('remove');
+
+                $('#mbtiles .form-group').append(newRow);
+            } else if ($(this).hasClass('remove')) {
+                $(this).parentsUntil('.form-group').remove();
+            }
+
+            return false;
+        });
+
         // add bounding box selection layer
         bbox = new OpenLayers.Layer.Vector("bbox", {
            displayInLayerSwitcher: false,
@@ -419,8 +443,9 @@ create.job = (function(){
                     $('#create-job-wizard').bootstrapWizard('enable', 2);
                     $('#create-job-wizard').bootstrapWizard('enable', 3);
                     $('#create-job-wizard').bootstrapWizard('enable', 4);
+                    $('#create-job-wizard').bootstrapWizard('enable', 5);
                 }
-                if (index == 2 || index == 3) {
+                if (index == 2 || index == 3 || index == 4) {
                     $('li.next').css('display', 'block');
                 }
                 else {
@@ -466,7 +491,7 @@ create.job = (function(){
                     validators: {
                         choice: {
                             min: 1,
-                            max: 6,
+                            max: 7,
                             message: gettext('At least one export format must be selected')
                         }
                     }
@@ -824,6 +849,12 @@ create.job = (function(){
                 $ul.append($('<li>' + description + '</li>'));
             });
             $('#summary-formats').html($ul);
+
+            if ($(this).find('input[name="formats"][value="mbtiles"]:checked').length > 0) {
+                $('#mbtiles-tab').removeClass('hidden');
+            } else {
+                $('#mbtiles-tab').addClass('hidden');
+            }
         });
 
          /*
@@ -991,6 +1022,28 @@ create.job = (function(){
                 // add tags and formats to the form data
                 form_data["tags"] = tags;
                 form_data["formats"] = formats;
+
+                // serialize MBTiles
+                form_data["metadata"] = form_data["metadata"] || {};
+                form_data["metadata"]["mbtiles"] = $("#mbtiles .row").map(function(idx, row){
+                    row = $(row);
+                    return {
+                        name: row.find("input[name=mbtiles_name]").val(),
+                        source: row.find("input[name=mbtiles_source]").val(),
+                        min_zoom: row.find("input[name=mbtiles_minzoom]").val() | 0,
+                        max_zoom: row.find("input[name=mbtiles_maxzoom]").val() | 0
+                    };
+                }).toArray().filter(function(mbtiles) {
+                    // ignore entries without a source
+                    return !!mbtiles.source;
+                });
+
+                // clean up after ourselves
+                delete form_data["mbtiles_name"];
+                delete form_data["mbtiles_source"];
+                delete form_data["mbtiles_minzoom"];
+                delete form_data["mbtiles_maxzoom"];
+
                 // convert to json string for submission.
                 var json_data = JSON.stringify(form_data);
                 $.ajax({
@@ -1956,6 +2009,12 @@ create.job = (function(){
         $('#formats-tab').popover({
             //title: 'Select Formats',
             content: gettext("Select one or more file formats for export"),
+            trigger: 'hover',
+            delay: {show: 0, hide: 100},
+            placement: 'top'
+        });
+        $('#mbtiles-tab').popover({
+            content: gettext("select mbtiles source(s)"),
             trigger: 'hover',
             delay: {show: 0, hide: 100},
             placement: 'top'

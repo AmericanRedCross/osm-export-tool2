@@ -55,37 +55,42 @@ class ExportTask(Task):
         finished = timezone.now()
         task = ExportTask.objects.get(celery_uid=task_id)
         task.finished_at = finished
+
         # get the output
-        output_url = retval['result']
-        stat = os.stat(output_url)
-        size = stat.st_size / 1024 / 1024.00
-        # construct the download_path
-        download_root = settings.EXPORT_DOWNLOAD_ROOT
-        parts = output_url.split('/')
-        filename = parts[-1]
-        run_uid = parts[-2]
-        run_dir = '{0}{1}'.format(download_root, run_uid)
-        download_path = '{0}{1}/{2}'.format(download_root, run_uid, filename)
-        try:
-            if not os.path.exists(run_dir):
-                os.makedirs(run_dir)
-            # don't copy raw overpass data
-            if (task.name != 'OverpassQuery'):
-                shutil.copy(output_url, download_path)
-        except IOError as e:
-            logger.error('Error copying output file to: {0}'.format(download_path))
-        # construct the download url
-        download_media_root = settings.EXPORT_MEDIA_ROOT
-        download_url = '{0}{1}/{2}'.format(download_media_root, run_uid, filename)
-        # save the task and task result
-        result = ExportTaskResult(
-            task=task,
-            name=retval.get('name'),
-            filename=filename,
-            size=size,
-            download_url=download_url
-        )
-        result.save()
+        if not isinstance(retval, list):
+            retval = [retval]
+
+        for out in retval:
+            output_url = out['result']
+            stat = os.stat(output_url)
+            size = stat.st_size / 1024 / 1024.00
+            # construct the download_path
+            download_root = settings.EXPORT_DOWNLOAD_ROOT
+            parts = output_url.split('/')
+            filename = parts[-1]
+            run_uid = parts[-2]
+            run_dir = '{0}{1}'.format(download_root, run_uid)
+            download_path = '{0}{1}/{2}'.format(download_root, run_uid, filename)
+            try:
+                if not os.path.exists(run_dir):
+                    os.makedirs(run_dir)
+                # don't copy raw overpass data
+                if (task.name != 'OverpassQuery'):
+                    shutil.copy(output_url, download_path)
+            except IOError as e:
+                logger.error('Error copying output file to: {0}'.format(download_path))
+            # construct the download url
+            download_media_root = settings.EXPORT_MEDIA_ROOT
+            download_url = '{0}{1}/{2}'.format(download_media_root, run_uid, filename)
+            # save the task and task result
+            result = ExportTaskResult(
+                name=out.get('name'),
+                task=task,
+                filename=filename,
+                size=size,
+                download_url=download_url
+            )
+            result.save()
         task.status = 'SUCCESS'
         task.save()
 

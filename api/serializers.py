@@ -153,7 +153,7 @@ class ExportTaskExceptionSerializer(serializers.ModelSerializer):
 
 class ExportTaskSerializer(serializers.ModelSerializer):
     """Serialize ExportTasks models."""
-    result = serializers.SerializerMethodField()
+    results = serializers.SerializerMethodField()
     errors = serializers.SerializerMethodField()
     started_at = serializers.SerializerMethodField()
     finished_at = serializers.SerializerMethodField()
@@ -165,13 +165,13 @@ class ExportTaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExportTask
-        fields = ('uid', 'url', 'name', 'status', 'started_at', 'finished_at', 'duration', 'result', 'errors',)
+        fields = ('uid', 'url', 'name', 'status', 'started_at', 'finished_at', 'duration', 'results', 'errors',)
 
-    def get_result(self, obj):
-        """Serialize the ExportTaskResult for this ExportTask."""
+    def get_results(self, obj):
+        """Serialize the ExportTaskResults for this ExportTask."""
         try:
-            result = obj.result
-            serializer = ExportTaskResultSerializer(result, many=False, context=self.context)
+            results = obj.results
+            serializer = ExportTaskResultSerializer(results, many=True, context=self.context)
             return serializer.data
         except ExportTaskResult.DoesNotExist as e:
             return None  # no result yet

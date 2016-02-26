@@ -124,10 +124,11 @@ class ExportTaskResultSerializer(serializers.ModelSerializer):
     """Serialize ExportTaskResult models."""
     url = serializers.SerializerMethodField()
     size = serializers.SerializerMethodField()
+    name = serializers.CharField(max_length=100)
 
     class Meta:
         model = ExportTaskResult
-        fields = ('filename', 'size', 'url',)
+        fields = ('filename', 'size', 'url', 'name',)
 
     def get_url(self, obj):
         request = self.context['request']

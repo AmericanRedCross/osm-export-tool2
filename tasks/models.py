@@ -84,6 +84,7 @@ class ExportTask(models.Model):
 
 class ExportTaskResult(models.Model):
     task = models.OneToOneField(ExportTask, primary_key=True, related_name='result')
+    name = models.CharField(max_length=100, null=True)
     filename = models.CharField(max_length=100, blank=True, editable=False)
     size = models.FloatField(null=True, editable=False)
     download_url = models.URLField(

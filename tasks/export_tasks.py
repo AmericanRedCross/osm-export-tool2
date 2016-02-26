@@ -80,6 +80,7 @@ class ExportTask(Task):
         # save the task and task result
         result = ExportTaskResult(
             task=task,
+            name=retval.get('name'),
             filename=filename,
             size=size,
             download_url=download_url

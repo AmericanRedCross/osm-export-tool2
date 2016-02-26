@@ -481,6 +481,122 @@ class FinalizeRunTask(Task):
         msg.send()
 
 
+class BundleTask(ExportTask):
+    """
+    Bundles artifacts.
+    """
+
+    name = "Bundled Artifacts"
+    tasks_to_bundle = [
+        MbtilesExportTask.name,
+        ObfExportTask.name,
+        # PbfExportTask.name,
+    ]
+
+    def run(self, job=None, job_name=None, run_uid=None, stage_dir=None):
+        self.update_task_state(run_uid=run_uid, name=self.name)
+
+        import json
+        import subprocess32 as subprocess
+
+        from tasks.models import ExportRun
+        tasks = ExportTask.objects.filter(run__uid=run_uid, name__in=self.tasks_to_bundle)
+
+        # assemble contents
+        contents = {}
+
+        for task in tasks:
+            if task.name == MbtilesExportTask.name:
+                for idx, result in enumerate(task.results):
+                    meta = job.metadata['mbtiles'][idx]
+                    contents['tiles/{0}'.format(task.filename)] = {
+                        'type': 'MBTiles',
+                        'minzoom': meta['min_zoom'],
+                        'maxzoom': meta['max_zoom'],
+                        'source': meta['source'],
+                        'name': task.name,
+                    }
+
+            if task.name == ObfExportTask.name:
+                contents['osmand/{0}'.format(task.filename)] = {
+                    'type': 'OSMAnd',
+                }
+
+            # if task.name == PbfExportTask.name:
+            #     contents['osm/{0}'.format(task.filename)] = {
+            #         'type': 'OSM/PBF',
+            #     }
+
+        # generate manifest
+        manifest = {
+            'title': job.name,
+            'name': job_name,
+            'description': job.description,
+            'bbox': job.extent,
+            'contents': contents
+        }
+
+        # write manifest.json
+        with open('{0}manifest.json'.format(stage_dir), 'w') as outfile:
+            json.dump(manifest, outfile)
+
+        # create tar
+        returncode = subprocess.call(
+            ['tar', '-cf', 'bundle.tar', 'manifest.json'],
+            cwd=stage_dir,
+        )
+
+        if returncode != 0:
+            raise Exception('tar creation failed with return code: {0}'.format(returncode))
+
+        # # add PBF
+        # returncode = subprocess.call(
+        #     ['tar', "--transform='flags=r;s|^|osm|'", '-rf', 'bundle.tar', '{0}.pbf'.format(job_name)],
+        #     cwd=stage_dir,
+        # )
+        #
+        # if returncode != 0:
+        #     raise Exception('PBF addition failed with return code: {0}'.format(returncode))
+
+        # add MBTiles
+        returncode = subprocess.call(
+            ['tar', "--transform='flags=r;s|^|tiles|'", '-rf', 'bundle.tar', '{0}_*.mbtiles'.format(job_name)],
+            cwd=stage_dir,
+        )
+
+        if returncode != 0:
+            raise Exception('MBTiles addition failed with return code: {0}'.format(returncode))
+
+        # # add ODK forms
+        # returncode = subprocess.call(
+        #     ['tar', "--transform='flags=r;s|^|odk|'", '-rf', 'bundle.tar', '*.xlsx'.format(job_name)],
+        #     cwd=stage_dir,
+        # )
+        #
+        # if returncode != 0:
+        #     raise Exception('ODK form addition failed with return code: {0}'.format(returncode))
+
+        # add OBF
+        returncode = subprocess.call(
+            ['tar', "--transform='flags=r;s|^|osmand|'", '-rf', 'bundle.tar', '{0}.obf'.format(job_name)],
+            cwd=stage_dir,
+        )
+
+        if returncode != 0:
+            raise Exception('OSMAnd addition failed with return code: {0}'.format(returncode))
+
+        # compress
+        returncode = subprocess.call(
+            ['xz', 'bundle.tar'],
+            cwd=stage_dir,
+        )
+
+        if returncode != 0:
+            raise Exception('compression failed with return code: {0}'.format(returncode))
+
+        return {'result': '{0}bundle.tar.xz'.format(stage_dir)}
+
+
 class ExportTaskErrorHandler(Task):
     """
     Handles un-recoverable errors in export tasks.

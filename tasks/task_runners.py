@@ -15,7 +15,7 @@ from tasks.models import ExportRun, ExportTask
 
 from .export_tasks import (
     FinalizeRunTask, GeneratePresetTask, OSMConfTask, OSMPrepSchemaTask,
-    OSMToPBFConvertTask, OverpassQueryTask
+    OSMToPBFConvertTask, OverpassQueryTask, BundleTask
 )
 
 # Get an instance of a logger
@@ -185,7 +185,12 @@ class ExportTaskRunner(TaskRunner):
                 task.si(run_uid=run_uid, stage_dir=stage_dir, job_name=job_name) for task in export_tasks
             )
 
-            finalize_task = FinalizeRunTask()
+            finalize_task = chord(header=BundleTask().si(stage_dir=stage_dir,
+                                                         job=job,
+                                                         job_name=job_name,
+                                                         run_uid=run_uid),
+                                  body=FinalizeRunTask().si(stage_dir=stage_dir,
+                                                            run_uid=run_uid))
 
             """
             If header tasks fail, errors will not propagate to the finalize_task.
@@ -195,7 +200,7 @@ class ExportTaskRunner(TaskRunner):
             chain(
                     chain(initial_tasks, schema_tasks),
                     chord(header=format_tasks,
-                        body=finalize_task.si(stage_dir=stage_dir, run_uid=run_uid))
+                          body=finalize_task)
             ).apply_async(expires=datetime.now() + timedelta(days=1))  # tasks expire after one day.
 
             return run

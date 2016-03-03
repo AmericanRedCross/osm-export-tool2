@@ -5,8 +5,9 @@ from __future__ import unicode_literals
 from django.contrib.postgres.fields.jsonb import JSONField
 from django.db import migrations
 
-# monkey patch JSONField for compatibility w/ pg 9.3
-JSONField.db_type = lambda self, connection: 'json'
+class LegacyJSONField(JSONField):
+    def db_type(self, connection):
+        return 'json'
 
 
 class Migration(migrations.Migration):

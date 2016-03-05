@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 
 import cPickle
+import logging
 import os
 import shutil
 
@@ -14,7 +15,6 @@ from django.template.loader import get_template
 from django.utils import timezone
 
 from celery import Task
-from celery.utils.log import get_task_logger
 
 from jobs.presets import TagParser
 from utils import (
@@ -22,7 +22,7 @@ from utils import (
 )
 
 # Get an instance of a logger
-logger = get_task_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 # ExportTask abstract base class and subclasses.
@@ -510,6 +510,139 @@ class FinalizeRunTask(Task):
         msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
         msg.attach_alternative(html, "text/html")
         msg.send()
+
+
+class BundleTask(ExportTask):
+    """
+    Bundles artifacts.
+    """
+
+    name = "Bundled Artifacts"
+    tasks_to_bundle = [
+        MbtilesExportTask.name,
+        ObfExportTask.name,
+        # PbfExportTask.name,
+    ]
+
+    def run(self, job=None, job_name=None, run_uid=None, stage_dir=None):
+        self.update_task_state(run_uid=run_uid, name=self.name)
+
+        import json
+        import subprocess32 as subprocess
+
+        from tasks.models import ExportTask
+        tasks = ExportTask.objects.filter(run__uid=run_uid, name__in=self.tasks_to_bundle)
+
+        # assemble contents
+        contents = {}
+
+        for task in tasks:
+            if task.name == MbtilesExportTask.name:
+                for idx, result in enumerate(task.results.all()):
+                    meta = job.metadata['mbtiles'][idx]
+                    contents['tiles/{0}'.format(result.filename)] = {
+                        'type': 'MBTiles',
+                        'minzoom': meta['min_zoom'],
+                        'maxzoom': meta['max_zoom'],
+                        'source': meta['source'],
+                        'name': task.name,
+                    }
+
+            if task.name == ObfExportTask.name:
+                contents['osmand/{0}'.format(task.filename)] = {
+                    'type': 'OSMAnd',
+                }
+
+            # if task.name == PbfExportTask.name:
+            #     contents['osm/{0}'.format(task.filename)] = {
+            #         'type': 'OSM/PBF',
+            #     }
+
+        # generate manifest
+        manifest = {
+            'title': job.name,
+            'name': job_name,
+            'description': job.description,
+            'bbox': job.extent,
+            'contents': contents
+        }
+
+        logger.debug("Manifest: {0}".format(json.dumps(manifest)))
+
+        # write manifest.json
+        with open('{0}manifest.json'.format(stage_dir), 'w') as outfile:
+            json.dump(manifest, outfile)
+
+        # create tar
+        args = ['tar', '-cf', 'bundle.tar', 'manifest.json']
+        logger.debug(" ".join(args))
+        returncode = subprocess.call(
+            args,
+            cwd=stage_dir,
+        )
+
+        if returncode != 0:
+            raise Exception('tar creation failed with return code: {0}'.format(returncode))
+
+
+        for task in tasks:
+            if task.name == MbtilesExportTask.name:
+                for idx, result in enumerate(task.results.all()):
+                    # add MBTiles
+                    args = ['tar', '--transform', 'flags=r;s|^|tiles/|', '-rf', 'bundle.tar', '{0}_{1}.mbtiles'.format(job_name, idx)]
+                    logger.debug(" ".join(args))
+                    returncode = subprocess.call(
+                        args,
+                        cwd=stage_dir,
+                    )
+
+                    if returncode != 0:
+                        raise Exception('MBTiles addition failed with return code: {0}'.format(returncode))
+
+            if task.name == ObfExportTask.name:
+                # add OBF
+                args = ['tar', '--transform', 'flags=r;s|^|osmand/|', '-rf', 'bundle.tar', '{0}.obf'.format(job_name)]
+                logger.debug(" ".join(args))
+                returncode = subprocess.call(
+                    args,
+                    cwd=stage_dir,
+                )
+
+                if returncode != 0:
+                    raise Exception('OSMAnd addition failed with return code: {0}'.format(returncode))
+
+            # if task.name == PbfExportTask.name:
+                # # add PBF
+                # args = ['tar', '--transform', 'flags=r;s|^|osm/|', '-rf', 'bundle.tar', '{0}.pbf'.format(job_name)],
+                # logger.debug(" ".join(args))
+                # returncode = subprocess.call(
+                #     args,
+                #     cwd=stage_dir,
+                # )
+                #
+                # if returncode != 0:
+                #     raise Exception('PBF addition failed with return code: {0}'.format(returncode))
+
+
+        # # add ODK forms
+        # returncode = subprocess.call(
+        #     ['tar', "--transform='flags=r;s|^|odk/|'", '-rf', 'bundle.tar', '*.xlsx'.format(job_name)],
+        #     cwd=stage_dir,
+        # )
+        #
+        # if returncode != 0:
+        #     raise Exception('ODK form addition failed with return code: {0}'.format(returncode))
+
+        # compress
+        returncode = subprocess.call(
+            ['gzip', 'bundle.tar'],
+            cwd=stage_dir,
+        )
+
+        if returncode != 0:
+            raise Exception('compression failed with return code: {0}'.format(returncode))
+
+        return {'result': '{0}bundle.tar.gz'.format(stage_dir)}
 
 
 class ExportTaskErrorHandler(Task):

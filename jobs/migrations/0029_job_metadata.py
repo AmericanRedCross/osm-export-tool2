@@ -20,6 +20,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='job',
             name='metadata',
-            field=JSONField(default=dict),
+            field=LegacyJSONField(default=dict),
         ),
     ]

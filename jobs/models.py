@@ -161,11 +161,18 @@ class Job(TimeStampedModelMixin):
         return '{0}'.format(self.name)
 
     @property
+    def extent(self, ):
+        """
+        Return the extent of the underlying geometry
+        """
+        return GEOSGeometry(self.the_geom).extent
+
+    @property
     def overpass_extents(self, ):
         """
         Return the export extents in order required by Overpass API.
         """
-        extents = GEOSGeometry(self.the_geom).extent  # (w,s,e,n)
+        extents = self.extent # (w,s,e,n)
         # overpass needs extents in order (s,w,n,e)
         overpass_extents = '{0},{1},{2},{3}'.format(str(extents[1]), str(extents[0]),
                                                     str(extents[3]), str(extents[2]))
@@ -176,7 +183,7 @@ class Job(TimeStampedModelMixin):
         """
         Return the export extent in the order expected by tl.
         """
-        extents = GEOSGeometry(self.the_geom).extent  # (w,s,e,n)
+        extents = self.extent # (w,s,e,n)
         # tl needs extents in order (w,s,e,n)
         tl_extent = '{0} {1} {2} {3}'.format(str(extents[0]), str(extents[1]),
                                              str(extents[2]), str(extents[3]))

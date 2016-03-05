@@ -299,6 +299,12 @@ exports.detail = (function(){
                                 if (status === 'SUCCESS') {
                                     $taskDiv.append('<tr><td><a href="' + result.url + '" target="_blank">' + gettext('OSM XML') + '</a></td><td>' + duration + '</td><td>' +
                                         result.size + '</td></tr>');
+                            case 'Bundled Artifacts':
+                                if (status === 'SUCCESS') {
+                                    results.forEach(function(result) {
+                                        $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('POSM Bundle') + ' - ' + result.name + '</a></td><td>' + duration + '</td><td>' +
+                                            result.size + '</td></tr>');
+                                    });
                                 }
                                 break;
                         }
@@ -595,6 +601,16 @@ exports.detail = (function(){
                             $taskDiv.append('<tr class="' + cls + ' ' + task.uid + '"><td>' + gettext('Generate JOSM Preset') + '</td><td>' + duration + '</td><td></td><td>' + task.status + '</td></tr>');
                         }
                         break;
+                    case 'Bundled Artifacts':
+                        if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
+                            cls = status.toLowerCase();
+                            $taskDiv.append('<tr class="' + cls + ' ' + task.uid + '"><td>' + gettext('POSM Bundle') + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td></tr>');
+                        }
+                        else {
+                            cls = status.toLowerCase();
+                            $taskDiv.append('<tr class="' + cls + ' ' + task.uid + '"><td>' + gettext('POSM Bundle') + '</td><td>' + duration + '</td><td></td><td>' + task.status + '</td></tr>');
+                        }
+                        break;
                     case 'MBTiles Export':
                         if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
                             cls = status.toLowerCase();
@@ -823,6 +839,21 @@ exports.detail = (function(){
                             $tr.removeClass();
                             $tr.addClass(status.toLowerCase());
                             $tr.html('<td>' + gettext('OSM Export') + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td>');
+                        }
+                        break;
+                    case 'Bundled Artifacts':
+                        if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
+                            $tr.removeClass();
+                            $tr.addClass(status.toLowerCase());
+                            $tr.html('<td>' + gettext('POSM Bundle') + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
+>>>>>>> origin/artifact-bundling
+                        }
+                        else {
+                            $tr.removeClass();
+                            $tr.addClass(status.toLowerCase());
+                            $tr.html('<td>' + gettext('POSM Bundle') + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td>');
+                        }
+                        break;
                     case 'MBTiles Export':
                         if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
                             $tr.each(function(idx, tr){

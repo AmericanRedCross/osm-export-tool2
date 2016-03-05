@@ -299,6 +299,8 @@ exports.detail = (function(){
                                 if (status === 'SUCCESS') {
                                     $taskDiv.append('<tr><td><a href="' + result.url + '" target="_blank">' + gettext('OSM XML') + '</a></td><td>' + duration + '</td><td>' +
                                         result.size + '</td></tr>');
+                                }
+                                break;
                             case 'Bundled Artifacts':
                                 if (status === 'SUCCESS') {
                                     results.forEach(function(result) {

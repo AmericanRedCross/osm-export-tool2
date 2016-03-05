@@ -378,6 +378,7 @@ class JobSerializer(serializers.Serializer):
     """
     EXPORT_FORMAT_CHOICES = (
         ('pbf', 'OSM PBF'),
+        ('osm', 'OSM XML Format'),
         ('shp', 'Shapefile Format'),
         ('obf', 'OBF Format'),
         ('kml', 'KML Format'),

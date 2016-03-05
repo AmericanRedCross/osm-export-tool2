@@ -573,8 +573,10 @@ class BundleTask(ExportTask):
         with open('{0}manifest.json'.format(stage_dir), 'w') as outfile:
             json.dump(manifest, outfile)
 
+        bundle_name = '{0}-bundle.tar'.format(job_name)
+
         # create tar
-        args = ['tar', '-cf', 'bundle.tar', 'manifest.json']
+        args = ['tar', '-cf', bundle_name, 'manifest.json']
         logger.debug(" ".join(args))
         returncode = subprocess.call(
             args,
@@ -589,7 +591,7 @@ class BundleTask(ExportTask):
             if task.name == MbtilesExportTask.name:
                 for idx, result in enumerate(task.results.all()):
                     # add MBTiles
-                    args = ['tar', '--transform', 'flags=r;s|^|tiles/|', '-rf', 'bundle.tar', '{0}_{1}.mbtiles'.format(job_name, idx)]
+                    args = ['tar', '--transform', 'flags=r;s|^|tiles/|', '-rf', bundle_name, '{0}_{1}.mbtiles'.format(job_name, idx)]
                     logger.debug(" ".join(args))
                     returncode = subprocess.call(
                         args,
@@ -601,7 +603,7 @@ class BundleTask(ExportTask):
 
             if task.name == ObfExportTask.name:
                 # add OBF
-                args = ['tar', '--transform', 'flags=r;s|^|osmand/|', '-rf', 'bundle.tar', '{0}.obf'.format(job_name)]
+                args = ['tar', '--transform', 'flags=r;s|^|osmand/|', '-rf', bundle_name, '{0}.obf'.format(job_name)]
                 logger.debug(" ".join(args))
                 returncode = subprocess.call(
                     args,
@@ -613,7 +615,7 @@ class BundleTask(ExportTask):
 
             if task.name == PbfExportTask.name:
                 # add PBF
-                args = ['tar', '--transform', 'flags=r;s|^|osm/|', '-rf', 'bundle.tar', '{0}.pbf'.format(job_name)],
+                args = ['tar', '--transform', 'flags=r;s|^|osm/|', '-rf', bundle_name, '{0}.pbf'.format(job_name)],
                 logger.debug(" ".join(args))
                 returncode = subprocess.call(
                     args,
@@ -635,14 +637,14 @@ class BundleTask(ExportTask):
 
         # compress
         returncode = subprocess.call(
-            ['gzip', 'bundle.tar'],
+            ['gzip', bundle_name],
             cwd=stage_dir,
         )
 
         if returncode != 0:
             raise Exception('compression failed with return code: {0}'.format(returncode))
 
-        return {'result': '{0}bundle.tar.gz'.format(stage_dir)}
+        return {'result': '{0}{1}.gz'.format(stage_dir, bundle_name)}
 
 
 class ExportTaskErrorHandler(Task):

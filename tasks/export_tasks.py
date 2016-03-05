@@ -518,11 +518,6 @@ class BundleTask(ExportTask):
     """
 
     name = "Bundled Artifacts"
-    tasks_to_bundle = [
-        MbtilesExportTask.name,
-        ObfExportTask.name,
-        # PbfExportTask.name,
-    ]
 
     def run(self, job=None, job_name=None, run_uid=None, stage_dir=None):
         self.update_task_state(run_uid=run_uid, name=self.name)
@@ -531,7 +526,7 @@ class BundleTask(ExportTask):
         import subprocess32 as subprocess
 
         from tasks.models import ExportTask
-        tasks = ExportTask.objects.filter(run__uid=run_uid, name__in=self.tasks_to_bundle)
+        tasks = ExportTask.objects.filter(run__uid=run_uid)
 
         # assemble contents
         contents = {}

@@ -7,7 +7,7 @@ import uuid
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.db import models
 from django.contrib.gis.geos import GEOSGeometry
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField, JSONField
 from django.db.models.fields import CharField
 from django.db.models.signals import post_delete, post_save
 from django.dispatch.dispatcher import receiver
@@ -146,6 +146,7 @@ class Job(TimeStampedModelMixin):
     the_geom_webmercator = models.PolygonField(verbose_name='Mercator extent for export', srid=3857, default='')
     the_geog = models.PolygonField(verbose_name='Geographic extent for export', geography=True, default='')
     objects = models.GeoManager()
+    metadata = JSONField(default=dict)
 
     class Meta:  # pragma: no cover
         managed = True
@@ -169,6 +170,17 @@ class Job(TimeStampedModelMixin):
         overpass_extents = '{0},{1},{2},{3}'.format(str(extents[1]), str(extents[0]),
                                                     str(extents[3]), str(extents[2]))
         return overpass_extents
+
+    @property
+    def tl_extent(self, ):
+        """
+        Return the export extent in the order expected by tl.
+        """
+        extents = GEOSGeometry(self.the_geom).extent  # (w,s,e,n)
+        # tl needs extents in order (w,s,e,n)
+        tl_extent = '{0} {1} {2} {3}'.format(str(extents[0]), str(extents[1]),
+                                             str(extents[2]), str(extents[3]))
+        return tl_extent
 
     @property
     def tag_dict(self,):

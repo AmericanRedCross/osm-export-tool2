@@ -8,3 +8,4 @@ python-social-auth
 lxml
 GDAL
 python-magic
+subprocess32

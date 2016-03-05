@@ -90,6 +90,30 @@ clone.job = (function(){
         // add export format checkboxes
         buildExportFormats();
 
+        // wire up the MBTiles row addition/removal buttons
+        $('#mbtiles .add').on('click', function(e){
+            if ($(this).hasClass('add')) {
+                // clone and reset the source on the new row
+                var newRow = $('#mbtiles .row').last().clone(true);
+                newRow.find('input[name=mbtiles_name]').val('');
+                newRow.find('input[name=mbtiles_source]').val('');
+
+                // change the button on the clicked row to be a removal
+                $(this).removeClass('glyphicon-plus-sign');
+                $(this).removeClass('btn-primary');
+                $(this).removeClass('add');
+                $(this).addClass('glyphicon-minus-sign');
+                $(this).addClass('btn-warning');
+                $(this).addClass('remove');
+
+                $('#mbtiles .form-group').append(newRow);
+            } else if ($(this).hasClass('remove')) {
+                $(this).parentsUntil('.form-group').remove();
+            }
+
+            return false;
+        });
+
         // add bounding box selection layer
         bbox = new OpenLayers.Layer.Vector("bbox", {
            displayInLayerSwitcher: false,
@@ -418,7 +442,7 @@ clone.job = (function(){
                 return validateTab(index);
             },
             onTabShow: function(tab, navigation, index){
-                if (index == 2 || index == 3) {
+                if (index == 2 || index == 3 || index == 4) {
                     $('li.next').css('display', 'block');
                 }
                 else {
@@ -464,7 +488,7 @@ clone.job = (function(){
                     validators: {
                         choice: {
                             min: 1,
-                            max: 8,
+                            max: 9,
                             message: gettext('At least one export format must be selected')
                         }
                     }
@@ -971,6 +995,22 @@ clone.job = (function(){
                 // add tags and formats to the form data
                 form_data["tags"] = tags;
                 form_data["formats"] = formats;
+
+                // serialize MBTiles
+                form_data["metadata"] = form_data["metadata"] || {};
+                form_data["metadata"]["mbtiles"] = $("#mbtiles .row").map(function(idx, row){
+                    row = $(row);
+                    return {
+                        name: row.find("input[name=mbtiles_name]").val(),
+                        source: row.find("input[name=mbtiles_source]").val(),
+                        min_zoom: row.find("input[name=mbtiles_minzoom]").val() | 0,
+                        max_zoom: row.find("input[name=mbtiles_maxzoom]").val() | 0
+                    };
+                }).toArray().filter(function(mbtiles) {
+                    // ignore entries without a source
+                    return !!mbtiles.source;
+                });
+
                 // convert to json string for submission.
                 var json_data = JSON.stringify(form_data);
                 $.ajax({
@@ -1960,6 +2000,12 @@ clone.job = (function(){
             delay: {show: 0, hide: 100},
             placement: 'top'
         });
+        $('#mbtiles-tab').popover({
+            content: gettext("Select MBTiles source(s)"),
+            trigger: 'hover',
+            delay: {show: 0, hide: 100},
+            placement: 'top'
+        });
         $('#features-tab').popover({
             //title: 'Select Formats',
             content: gettext("Expand and select feature tags from the HDM or OSM tree list for export"),
@@ -2069,6 +2115,42 @@ clone.job = (function(){
             $.each(data.exports, function(idx, format){
                 $('#supported-formats input[value="' + format.slug + '"]').prop('checked', true);
             });
+
+            // -- select mbtiles tab -- //
+            var containsMBTiles = data.exports.some(function(format){
+                return format.slug === "mbtiles";
+            });
+
+            if (containsMBTiles) {
+                $("#mbtiles-tab").removeClass("hidden");
+            }
+
+            if (data.metadata && data.metadata.mbtiles && data.metadata.mbtiles.length > 0) {
+                $.each(data.metadata.mbtiles, function(idx, info){
+                    var row = $($('#mbtiles .row')[idx]);
+
+                    if (row.length === 0) {
+                        var lastRow = $('#mbtiles .row').last();
+
+                        row = lastRow.clone(true);
+
+                        var lastButton = lastRow.find('button');
+                        lastButton.removeClass('glyphicon-plus-sign');
+                        lastButton.removeClass('btn-primary');
+                        lastButton.removeClass('add');
+                        lastButton.addClass('glyphicon-minus-sign');
+                        lastButton.addClass('btn-warning');
+                        lastButton.addClass('remove');
+                    }
+
+                    row.find('input[name=mbtiles_name]').val(info.name);
+                    row.find('input[name=mbtiles_source]').val(info.source);
+                    row.find('input[name=mbtiles_minzoom]').val(info.min_zoom);
+                    row.find('input[name=mbtiles_maxzoom]').val(info.max_zoom);
+
+                    $('#mbtiles .form-group').append(row);
+                });
+            }
 
             // -- select features tab -- //
 

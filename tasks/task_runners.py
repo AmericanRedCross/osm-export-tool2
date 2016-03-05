@@ -165,6 +165,18 @@ class ExportTaskRunner(TaskRunner):
                 # add to export tasks
                 export_tasks.append(preset_task)
 
+            # save the bundle task
+            bundle_task = BundleTask()
+            try:
+                ExportTask.objects.create(run=run,
+                                          status='PENDING',
+                                          name=bundle_task.name)
+                logger.debug('Saved task: {0}'.format(bundle_task.name))
+            except DatabaseError as e:
+                logger.error('Saving task {0} threw: {1}'.format(bundle_task.name, e))
+                raise e
+
+
             """
             Create a celery chain which runs the initial conf and query tasks (initial_tasks),
             followed by a chain of pbfconvert and prep_schema (schema_tasks).
@@ -185,12 +197,16 @@ class ExportTaskRunner(TaskRunner):
                 task.si(run_uid=run_uid, stage_dir=stage_dir, job_name=job_name) for task in export_tasks
             )
 
-            finalize_task = chord(header=BundleTask().si(stage_dir=stage_dir,
-                                                         job=job,
-                                                         job_name=job_name,
-                                                         run_uid=run_uid),
-                                  body=FinalizeRunTask().si(stage_dir=stage_dir,
-                                                            run_uid=run_uid))
+            bundle_tasks = group(
+                bundle_task.si(
+                    stage_dir=stage_dir,
+                    job=job,
+                    job_name=job_name,
+                    run_uid=run_uid
+                ),
+            )
+
+            finalize_task = FinalizeRunTask()
 
             """
             If header tasks fail, errors will not propagate to the finalize_task.
@@ -199,8 +215,8 @@ class ExportTaskRunner(TaskRunner):
             """
             chain(
                     chain(initial_tasks, schema_tasks),
-                    chord(header=format_tasks,
-                          body=finalize_task)
+                    chord(header=chain(format_tasks, bundle_tasks),
+                          body=finalize_task.si(stage_dir=stage_dir, run_uid=run_uid))
             ).apply_async(expires=datetime.now() + timedelta(days=1))  # tasks expire after one day.
 
             return run

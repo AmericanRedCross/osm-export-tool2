@@ -499,7 +499,7 @@ class BundleTask(ExportTask):
         import json
         import subprocess32 as subprocess
 
-        from tasks.models import ExportRun
+        from tasks.models import ExportTask
         tasks = ExportTask.objects.filter(run__uid=run_uid, name__in=self.tasks_to_bundle)
 
         # assemble contents
@@ -507,9 +507,9 @@ class BundleTask(ExportTask):
 
         for task in tasks:
             if task.name == MbtilesExportTask.name:
-                for idx, result in enumerate(task.results):
+                for idx, result in enumerate(task.results.all()):
                     meta = job.metadata['mbtiles'][idx]
-                    contents['tiles/{0}'.format(task.filename)] = {
+                    contents['tiles/{0}'.format(result.filename)] = {
                         'type': 'MBTiles',
                         'minzoom': meta['min_zoom'],
                         'maxzoom': meta['max_zoom'],
@@ -536,65 +536,82 @@ class BundleTask(ExportTask):
             'contents': contents
         }
 
+        logger.debug("Manifest: {0}".format(json.dumps(manifest)))
+
         # write manifest.json
         with open('{0}manifest.json'.format(stage_dir), 'w') as outfile:
             json.dump(manifest, outfile)
 
         # create tar
+        args = ['tar', '-cf', 'bundle.tar', 'manifest.json']
+        logger.debug(" ".join(args))
         returncode = subprocess.call(
-            ['tar', '-cf', 'bundle.tar', 'manifest.json'],
+            args,
             cwd=stage_dir,
         )
 
         if returncode != 0:
             raise Exception('tar creation failed with return code: {0}'.format(returncode))
 
-        # # add PBF
-        # returncode = subprocess.call(
-        #     ['tar', "--transform='flags=r;s|^|osm|'", '-rf', 'bundle.tar', '{0}.pbf'.format(job_name)],
-        #     cwd=stage_dir,
-        # )
-        #
-        # if returncode != 0:
-        #     raise Exception('PBF addition failed with return code: {0}'.format(returncode))
 
-        # add MBTiles
-        returncode = subprocess.call(
-            ['tar', "--transform='flags=r;s|^|tiles|'", '-rf', 'bundle.tar', '{0}_*.mbtiles'.format(job_name)],
-            cwd=stage_dir,
-        )
+        for task in tasks:
+            if task.name == MbtilesExportTask.name:
+                for idx, result in enumerate(task.results.all()):
+                    # add MBTiles
+                    args = ['tar', '--transform', 'flags=r;s|^|tiles/|', '-rf', 'bundle.tar', '{0}_{1}.mbtiles'.format(job_name, idx)]
+                    logger.debug(" ".join(args))
+                    returncode = subprocess.call(
+                        args,
+                        cwd=stage_dir,
+                    )
 
-        if returncode != 0:
-            raise Exception('MBTiles addition failed with return code: {0}'.format(returncode))
+                    if returncode != 0:
+                        raise Exception('MBTiles addition failed with return code: {0}'.format(returncode))
+
+            if task.name == ObfExportTask.name:
+                # add OBF
+                args = ['tar', '--transform', 'flags=r;s|^|osmand/|', '-rf', 'bundle.tar', '{0}.obf'.format(job_name)]
+                logger.debug(" ".join(args))
+                returncode = subprocess.call(
+                    args,
+                    cwd=stage_dir,
+                )
+
+                if returncode != 0:
+                    raise Exception('OSMAnd addition failed with return code: {0}'.format(returncode))
+
+            # if task.name == PbfExportTask.name:
+                # # add PBF
+                # args = ['tar', '--transform', 'flags=r;s|^|osm/|', '-rf', 'bundle.tar', '{0}.pbf'.format(job_name)],
+                # logger.debug(" ".join(args))
+                # returncode = subprocess.call(
+                #     args,
+                #     cwd=stage_dir,
+                # )
+                #
+                # if returncode != 0:
+                #     raise Exception('PBF addition failed with return code: {0}'.format(returncode))
+
 
         # # add ODK forms
         # returncode = subprocess.call(
-        #     ['tar', "--transform='flags=r;s|^|odk|'", '-rf', 'bundle.tar', '*.xlsx'.format(job_name)],
+        #     ['tar', "--transform='flags=r;s|^|odk/|'", '-rf', 'bundle.tar', '*.xlsx'.format(job_name)],
         #     cwd=stage_dir,
         # )
         #
         # if returncode != 0:
         #     raise Exception('ODK form addition failed with return code: {0}'.format(returncode))
 
-        # add OBF
-        returncode = subprocess.call(
-            ['tar', "--transform='flags=r;s|^|osmand|'", '-rf', 'bundle.tar', '{0}.obf'.format(job_name)],
-            cwd=stage_dir,
-        )
-
-        if returncode != 0:
-            raise Exception('OSMAnd addition failed with return code: {0}'.format(returncode))
-
         # compress
         returncode = subprocess.call(
-            ['xz', 'bundle.tar'],
+            ['gzip', 'bundle.tar'],
             cwd=stage_dir,
         )
 
         if returncode != 0:
             raise Exception('compression failed with return code: {0}'.format(returncode))
 
-        return {'result': '{0}bundle.tar.xz'.format(stage_dir)}
+        return {'result': '{0}bundle.tar.gz'.format(stage_dir)}
 
 
 class ExportTaskErrorHandler(Task):

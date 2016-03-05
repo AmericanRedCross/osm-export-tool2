@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 
 import cPickle
+import logging
 import os
 import shutil
 
@@ -14,7 +15,6 @@ from django.template.loader import get_template
 from django.utils import timezone
 
 from celery import Task
-from celery.utils.log import get_task_logger
 
 from jobs.presets import TagParser
 from utils import (
@@ -22,7 +22,7 @@ from utils import (
 )
 
 # Get an instance of a logger
-logger = get_task_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 # ExportTask abstract base class and subclasses.

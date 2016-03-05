@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from django.utils import timezone
 
 from celery import Task
-from celery.utils.log import get_task_logger
 
-logger = get_task_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class PurgeUnpublishedExportsTask(Task):

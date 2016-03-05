@@ -553,10 +553,10 @@ class BundleTask(ExportTask):
                     'type': 'OSMAnd',
                 }
 
-            # if task.name == PbfExportTask.name:
-            #     contents['osm/{0}'.format(task.filename)] = {
-            #         'type': 'OSM/PBF',
-            #     }
+            if task.name == PbfExportTask.name:
+                contents['osm/{0}'.format(task.filename)] = {
+                    'type': 'OSM/PBF',
+                }
 
         # generate manifest
         manifest = {
@@ -611,17 +611,17 @@ class BundleTask(ExportTask):
                 if returncode != 0:
                     raise Exception('OSMAnd addition failed with return code: {0}'.format(returncode))
 
-            # if task.name == PbfExportTask.name:
-                # # add PBF
-                # args = ['tar', '--transform', 'flags=r;s|^|osm/|', '-rf', 'bundle.tar', '{0}.pbf'.format(job_name)],
-                # logger.debug(" ".join(args))
-                # returncode = subprocess.call(
-                #     args,
-                #     cwd=stage_dir,
-                # )
-                #
-                # if returncode != 0:
-                #     raise Exception('PBF addition failed with return code: {0}'.format(returncode))
+            if task.name == PbfExportTask.name:
+                # add PBF
+                args = ['tar', '--transform', 'flags=r;s|^|osm/|', '-rf', 'bundle.tar', '{0}.pbf'.format(job_name)],
+                logger.debug(" ".join(args))
+                returncode = subprocess.call(
+                    args,
+                    cwd=stage_dir,
+                )
+
+                if returncode != 0:
+                    raise Exception('PBF addition failed with return code: {0}'.format(returncode))
 
 
         # # add ODK forms

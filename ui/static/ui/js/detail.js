@@ -1029,7 +1029,7 @@ exports.detail = (function(){
     }
 
     /*
-     * Loads preset details on fetaures modal.
+     * Loads preset details on features modal.
      */
     function initPresetList(configurations){
         var $filelist = $('#filelist');

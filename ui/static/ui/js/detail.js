@@ -304,7 +304,7 @@ exports.detail = (function(){
                             case 'Bundled Artifacts':
                                 if (status === 'SUCCESS') {
                                     results.forEach(function(result) {
-                                        $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('POSM Bundle') + ' - ' + result.name + '</a></td><td>' + duration + '</td><td>' +
+                                        $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('POSM Bundle') + '</a></td><td>' + duration + '</td><td>' +
                                             result.size + '</td></tr>');
                                     });
                                 }

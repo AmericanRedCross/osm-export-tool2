@@ -848,7 +848,6 @@ exports.detail = (function(){
                             $tr.removeClass();
                             $tr.addClass(status.toLowerCase());
                             $tr.html('<td>' + gettext('POSM Bundle') + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
->>>>>>> origin/artifact-bundling
                         }
                         else {
                             $tr.removeClass();

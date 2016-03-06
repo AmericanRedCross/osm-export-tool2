@@ -610,7 +610,10 @@ exports.detail = (function(){
                         }
                         else {
                             cls = status.toLowerCase();
-                            $taskDiv.append('<tr class="' + cls + ' ' + task.uid + '"><td>' + gettext('POSM Bundle') + '</td><td>' + duration + '</td><td></td><td>' + task.status + '</td></tr>');
+                            results.forEach(function(result) {
+                                $taskDiv.append('<tr class="' + cls + ' ' + task.uid + '"><td><a href="' + result.url + '">' + gettext('POSM Bundle') + '</a></td><td>' + duration + '</td><td>' +
+                                result.size + '</td><td>' + task.status + '</td></tr>');
+                            });
                         }
                         break;
                     case 'MBTiles Export':

@@ -612,7 +612,7 @@ class BundleTask(ExportTask):
 
             if task.name == PbfExportTask.name:
                 # add PBF
-                args = ['tar', '--transform', 'flags=r;s|^|osm/|', '-rf', bundle_name, '{0}.pbf'.format(job_name)],
+                args = ['tar', '--transform', 'flags=r;s|^|osm/|', '-rf', bundle_name, '{0}.pbf'.format(job_name)]
                 logger.debug(" ".join(args))
                 returncode = subprocess.call(
                     args,

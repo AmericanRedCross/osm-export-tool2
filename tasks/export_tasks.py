@@ -544,12 +544,12 @@ class BundleTask(ExportTask):
                     }
 
             if task.name == ObfExportTask.name:
-                contents['osmand/{0}'.format(task.filename)] = {
+                contents['osmand/{0}'.format(result.filename)] = {
                     'type': 'OSMAnd',
                 }
 
             if task.name == PbfExportTask.name:
-                contents['osm/{0}'.format(task.filename)] = {
+                contents['osm/{0}'.format(result.filename)] = {
                     'type': 'OSM/PBF',
                 }
 

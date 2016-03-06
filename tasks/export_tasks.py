@@ -144,7 +144,7 @@ class ExportTask(Task):
             task.save()
             logger.debug('Updated task: {0} with uid: {1}'.format(task.name, task.uid))
         except DatabaseError as e:
-            logger.error('Updating task {0} state throws: {1}'.format(task.name, e))
+            logger.error('Updating task {0} state throws: {1}'.format(celery_uid, e))
             raise e
 
 

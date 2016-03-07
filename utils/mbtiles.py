@@ -62,7 +62,7 @@ class MBTiles(object):
 
         returncode = subprocess.call(
             generate_cmd,
-            timeout=15 * 60,
+            timeout=60 * 60,
         )
 
         if returncode != 0:

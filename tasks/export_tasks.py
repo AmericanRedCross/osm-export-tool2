@@ -588,7 +588,7 @@ class BundleTask(ExportTask):
             if task.name == MbtilesExportTask.name:
                 for idx, result in enumerate(task.results.all()):
                     # add MBTiles
-                    args = ['tar', '--transform', 'flags=r;s|^|tiles/|', '-rf', bundle_name, '{0}_{1}.mbtiles'.format(job_name, idx)]
+                    args = ['tar', '--transform', 'flags=r;s|^|tiles/|', '-rf', bundle_name, result.filename]
                     logger.debug(" ".join(args))
                     returncode = subprocess.call(
                         args,
@@ -600,7 +600,7 @@ class BundleTask(ExportTask):
 
             if task.name == ObfExportTask.name:
                 # add OBF
-                args = ['tar', '--transform', 'flags=r;s|^|osmand/|', '-rf', bundle_name, '{0}.obf'.format(job_name)]
+                args = ['tar', '--transform', 'flags=r;s|^|osmand/|', '-rf', bundle_name, result.filename]
                 logger.debug(" ".join(args))
                 returncode = subprocess.call(
                     args,
@@ -612,7 +612,7 @@ class BundleTask(ExportTask):
 
             if task.name == PbfExportTask.name:
                 # add PBF
-                args = ['tar', '--transform', 'flags=r;s|^|osm/|', '-rf', bundle_name, '{0}.pbf'.format(job_name)]
+                args = ['tar', '--transform', 'flags=r;s|^|osm/|', '-rf', bundle_name, result.filename]
                 logger.debug(" ".join(args))
                 returncode = subprocess.call(
                     args,

@@ -600,6 +600,7 @@ class BundleTask(ExportTask):
 
             if task.name == ObfExportTask.name:
                 # add OBF
+                result = task.results.all()[0]
                 args = ['tar', '--transform', 'flags=r;s|^|osmand/|', '-rf', bundle_name, result.filename]
                 logger.debug(" ".join(args))
                 returncode = subprocess.call(
@@ -612,6 +613,7 @@ class BundleTask(ExportTask):
 
             if task.name == PbfExportTask.name:
                 # add PBF
+                result = task.results.all()[0]
                 args = ['tar', '--transform', 'flags=r;s|^|osm/|', '-rf', bundle_name, result.filename]
                 logger.debug(" ".join(args))
                 returncode = subprocess.call(

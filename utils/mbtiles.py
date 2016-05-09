@@ -47,6 +47,7 @@ class MBTiles(object):
         generate_cmd = [
             'tl',
             'copy',
+            '-q',
             '-b',
             self.bbox,
             '-z',

@@ -14,68 +14,13 @@ class Migration(migrations.Migration):
     def insert_regions(apps, schema_editor):
         Region = apps.get_model('jobs', 'Region')
 
-        ds = DataSource(os.path.dirname(os.path.realpath(__file__)) + '/africa.geojson')
+        ds = DataSource(os.path.dirname(os.path.realpath(__file__)) + '/world.geojson')
         layer = ds[0]
         geom = layer.get_geoms(geos=True)[0]
         the_geom = GEOSGeometry(geom.wkt, srid=4326)
         the_geog = GEOSGeometry(geom.wkt)
         the_geom_webmercator = the_geom.transform(ct=3857, clone=True)
-        region = Region.objects.create(name="Africa", description="African export region",
-                        the_geom=the_geom, the_geog=the_geog, the_geom_webmercator=the_geom_webmercator
-        )
-        ds = None
-
-        ds = DataSource(os.path.dirname(os.path.realpath(__file__)) + '/burma.geojson')
-        layer = ds[0]
-        geom = layer.get_geoms(geos=True)[0]
-        the_geom = GEOSGeometry(geom.wkt, srid=4326)
-        the_geog = GEOSGeometry(geom.wkt)
-        the_geom_webmercator = the_geom.transform(ct=3857, clone=True)
-        region = Region.objects.create(name="Burma", description="Burmese export region",
-                        the_geom=the_geom, the_geog=the_geog, the_geom_webmercator=the_geom_webmercator
-        )
-        ds = None
-
-        ds = DataSource(os.path.dirname(os.path.realpath(__file__)) + '/central_asia.geojson')
-        layer = ds[0]
-        geom = layer.get_geoms(geos=True)[0]
-        the_geom = GEOSGeometry(geom.wkt, srid=4326)
-        the_geog = GEOSGeometry(geom.wkt)
-        the_geom_webmercator = the_geom.transform(ct=3857, clone=True)
-        region = Region.objects.create(name="Central Asia/Middle East", description="Central Asia/Middle East export region",
-                        the_geom=the_geom, the_geog=the_geog, the_geom_webmercator=the_geom_webmercator
-        )
-        ds = None
-
-        ds = DataSource(os.path.dirname(os.path.realpath(__file__)) + '/indonesia.geojson')
-        layer = ds[0]
-        geom = layer.get_geoms(geos=True)[0]
-        the_geom = GEOSGeometry(geom.wkt, srid=4326)
-        the_geog = GEOSGeometry(geom.wkt)
-        the_geom_webmercator = the_geom.transform(ct=3857, clone=True)
-        region = Region.objects.create(name="Indonesia, Sri Lanka, and Bangladesh", description="Indonesia, Sri Lanka, and Bangladesh export region",
-                        the_geom=the_geom, the_geog=the_geog, the_geom_webmercator=the_geom_webmercator
-        )
-        ds = None
-
-        ds = DataSource(os.path.dirname(os.path.realpath(__file__)) + '/philippines.geojson')
-        layer = ds[0]
-        geom = layer.get_geoms(geos=True)[0]
-        the_geom = GEOSGeometry(geom.wkt, srid=4326)
-        the_geog = GEOSGeometry(geom.wkt)
-        the_geom_webmercator = the_geom.transform(ct=3857, clone=True)
-        region = Region.objects.create(name="Philippines", description="Philippines export region",
-                        the_geom=the_geom, the_geog=the_geog, the_geom_webmercator=the_geom_webmercator
-        )
-        ds = None
-
-        ds = DataSource(os.path.dirname(os.path.realpath(__file__)) + '/south_america.geojson')
-        layer = ds[0]
-        geom = layer.get_geoms(geos=True)[0]
-        the_geom = GEOSGeometry(geom.wkt, srid=4326)
-        the_geog = GEOSGeometry(geom.wkt)
-        the_geom_webmercator = the_geom.transform(ct=3857, clone=True)
-        region = Region.objects.create(name="South and Central America", description="South and Central America export region",
+        region = Region.objects.create(name="The World", description="Worldwide export region",
                         the_geom=the_geom, the_geog=the_geog, the_geom_webmercator=the_geom_webmercator
         )
         ds = None

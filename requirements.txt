@@ -10,3 +10,5 @@ GDAL
 python-magic
 subprocess32
 requests>=2.5.1
+django_extensions
+openid

@@ -3,7 +3,7 @@ psycopg2
 django-filter==0.13.0
 djangorestframework-gis==0.10.1
 djangorestframework==3.3.3
-celery[librabbitmq]
+celery[librabbitmq]==3.1.23
 python-social-auth==0.2.19
 lxml
 GDAL
@@ -12,3 +12,4 @@ subprocess32
 requests>=2.5.1
 django_extensions
 python-openid
+kombu<4

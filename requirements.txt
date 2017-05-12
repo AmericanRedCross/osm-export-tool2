@@ -1,10 +1,10 @@
 Django>=1.8,<=1.9
 psycopg2
-djangorestframework
-django-filter
-djangorestframework-gis
+django-filter==0.13.0
+djangorestframework-gis==0.10.1
+djangorestframework==3.3.3
 celery[librabbitmq]
-python-social-auth
+python-social-auth==0.2.19
 lxml
 GDAL
 python-magic
